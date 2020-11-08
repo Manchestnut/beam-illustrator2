@@ -43,9 +43,21 @@ $bot_bar_qty = isset($_SESSION["bot_bar_qty"]) ? $_SESSION["bot_bar_qty"] : $def
       .myDiv{
         border: 1px solid black;
         text-align: right;
-        float: right;
         width: fit-content;
         padding: 10px;
+        float: right;
+        position: relative;
+        display: flex;
+        justify-content:center;
+        height: fit-content;
+        margin: auto;
+      }
+
+      body{
+        display: flex;
+        justify-content: space-between;
+        flex-direction: row-reverse;
+        gap: 300px;
       }
     </style>
   </head>
@@ -73,9 +85,8 @@ $bot_bar_qty = isset($_SESSION["bot_bar_qty"]) ? $_SESSION["bot_bar_qty"] : $def
 
       <label for="bot_bar_qty">Bot Bar Qty:</label>
       <input type="text" name="bot_bar_qty" value="<?php echo $bot_bar_qty; ?>"><br>
-
-      <input type="submit">
       <br>
+      <input type="submit">
       <br>
     </form>
     </div>
@@ -90,6 +101,14 @@ $bot_bar_qty = isset($_SESSION["bot_bar_qty"]) ? $_SESSION["bot_bar_qty"] : $def
     var top_bar_qty = <?php echo $top_bar_qty; ?>;
     var bot_bar_qty = <?php echo $bot_bar_qty; ?>;
 
+    var margin = 200;
+    var dim_text_size = 20;
+    var dim_text_font = "Arial";
+    var dim_tick_length = 10;
+    var set_dim_offset = 2;
+    var set_dim_text_offset = 10;
+    var set_inner_dim_offset = 35;
+
 
     // CONSTANTS
     const beam_center_x = beam_width / 2;
@@ -99,22 +118,33 @@ $bot_bar_qty = isset($_SESSION["bot_bar_qty"]) ? $_SESSION["bot_bar_qty"] : $def
     const stirrup_width_inner = beam_width - (concrete_cover + concrete_cover + stirrup_diameter + stirrup_diameter);
     const stirrup_height_inner = beam_height - (concrete_cover + concrete_cover + stirrup_diameter + stirrup_diameter);
     const rebar_radius = rebar_diameter / 2;
-    const rebar_origin_location = concrete_cover + rebar_radius + stirrup_diameter;
+    const rebar_origin_location = concrete_cover + rebar_radius + stirrup_diameter + margin;
     const rebar_width = stirrup_width_inner - rebar_diameter;
     const top_bar_spacing = rebar_width / (top_bar_qty - 1);
     const bot_bar_spacing = rebar_width / (bot_bar_qty - 1);
 
+    const canvas_width = beam_width + (margin * 2);
+    const canvas_height = beam_height + (margin * 2);
+    const canvas_center_x = canvas_width / 2;
+    const canvas_center_y = canvas_height / 2;
+
+    const dim_offset = margin / set_dim_offset;
+    const dim_text_offset = dim_offset - set_dim_text_offset;
+
 
     // FUNCTIONS
     function setup() {
-      createCanvas(beam_width, beam_height);
+      createCanvas(canvas_width, canvas_height);
+      background('white');
+      angleMode(DEGREES);
+      textFont(dim_text_font);
     }
 
     // 1. Draw beam outline first.
     function draw_beam_outline() {
       rectMode(CENTER);
-      rect(beam_center_x,
-           beam_center_y,
+      rect(canvas_center_x,
+           canvas_center_y,
            beam_width,
            beam_height);
     }
@@ -122,8 +152,8 @@ $bot_bar_qty = isset($_SESSION["bot_bar_qty"]) ? $_SESSION["bot_bar_qty"] : $def
     // 2. Draw stirrup's outer edge.
     function draw_stirrup_out_edge() {
       rectMode(CENTER);
-      rect(beam_center_x,
-           beam_center_y,
+      rect(canvas_center_x,
+           canvas_center_y,
            stirrup_width,
            stirrup_height);
     }
@@ -131,8 +161,8 @@ $bot_bar_qty = isset($_SESSION["bot_bar_qty"]) ? $_SESSION["bot_bar_qty"] : $def
     // 3. Draw stirrup's inner edge.
     function draw_stirrup_inner_edge() {
       rectMode(CENTER);
-      rect(beam_center_x,
-           beam_center_y,
+      rect(canvas_center_x,
+           canvas_center_y,
            stirrup_width_inner,
            stirrup_height_inner);
     }
@@ -156,15 +186,138 @@ $bot_bar_qty = isset($_SESSION["bot_bar_qty"]) ? $_SESSION["bot_bar_qty"] : $def
 
     }
 
+    // 6. Draw horizontal dimension.
+    function draw_hor_dimension() {
+      // DIM HORIZONTAL
+      line(
+        margin - dim_tick_length,
+        dim_offset,
+        beam_width + margin + dim_tick_length,
+        dim_offset);
+
+      translate(0,set_inner_dim_offset);
+      line(
+        margin - dim_tick_length,
+        dim_offset,
+        beam_width + margin + dim_tick_length,
+        dim_offset);
+      translate(0,-set_inner_dim_offset);
+
+      line(
+        margin,
+        margin,
+        margin,
+        dim_offset - dim_tick_length);
+
+      translate(concrete_cover, 0);
+      line(
+        margin,
+        margin,
+        margin,
+        dim_offset + set_inner_dim_offset - dim_tick_length);
+      translate(-concrete_cover, 0);
+
+      translate(concrete_cover + stirrup_width, 0);
+      line(
+        margin,
+        margin,
+        margin,
+        dim_offset + set_inner_dim_offset - dim_tick_length);
+      translate(-(concrete_cover + stirrup_width), 0);
+
+      line(
+        margin+beam_width,
+        margin+beam_width,
+        margin+beam_width,
+        dim_offset - dim_tick_length);
+
+      textAlign(CENTER,CENTER);
+      textSize(dim_text_size);
+      text(beam_width, canvas_center_x, dim_text_offset);
+
+      translate(0,set_inner_dim_offset);
+      textAlign(CENTER,CENTER);
+      textSize(dim_text_size);
+      text(stirrup_width, canvas_center_x, dim_text_offset);
+      translate(0,-set_inner_dim_offset);
+    }
+
+    function draw_ver_dimension() {
+      // DIM VERTICAL
+      line(
+        dim_offset,
+        margin - dim_tick_length,
+        dim_offset,
+        beam_height + margin + dim_tick_length);
+
+      translate(set_inner_dim_offset,0);
+      line(
+        dim_offset,
+        margin - dim_tick_length,
+        dim_offset,
+        beam_height + margin + dim_tick_length);
+      translate(-set_inner_dim_offset,0);
+
+      line(
+        margin,
+        margin,
+        dim_offset - dim_tick_length,
+        margin);
+
+      translate(0, concrete_cover);
+      line(
+        margin,
+        margin,
+        dim_offset + set_inner_dim_offset - dim_tick_length,
+        margin);
+      translate(0, - concrete_cover);
+
+      translate(0, concrete_cover + stirrup_height);
+      line(
+        margin,
+        margin,
+        dim_offset + set_inner_dim_offset - dim_tick_length,
+        margin);
+      translate(0, - (concrete_cover + stirrup_height));
+
+      line(
+        margin,
+        margin+beam_height,
+        dim_offset - dim_tick_length,
+        margin+beam_height);
+
+      textAlign(CENTER,CENTER);
+      textSize(dim_text_size);
+      translate(dim_text_offset, canvas_center_y);
+      rotate(-90);
+      text(beam_height, 0, 0);
+      rotate(90);
+      translate(-dim_text_offset, -canvas_center_y);
+
+      translate(set_inner_dim_offset,0);
+      textAlign(CENTER,CENTER);
+      textSize(dim_text_size);
+      translate(dim_text_offset, canvas_center_y);
+      rotate(-90);
+      text(stirrup_height, 0, 0);
+      rotate(90);
+      translate(-dim_text_offset, -canvas_center_y);
+      translate(-set_inner_dim_offset,0);
+
+    }
+
     // MAIN FUNCTION
     function draw() {
+      strokeWeight(3);
       draw_beam_outline();
+      strokeWeight(1);
       draw_stirrup_out_edge();
       draw_stirrup_inner_edge();
       draw_top_bars();
       draw_bot_bars();
+      draw_hor_dimension();
+      draw_ver_dimension();
     }
-
     </script>
 
   </body>
